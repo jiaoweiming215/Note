@@ -30,4 +30,4 @@ hello world,hello github<br>
 插入图片
 ---
 
-![baidu](http://www.baidu.com/img/bdlogo.gif) 
+![doutula](http://ww1.sinaimg.cn/large/9150e4e5ly1fmz6mdej1ng206o06oags.gif) 
