@@ -21,4 +21,11 @@ LPWA可分为两类：
 国际标准：NB-IoT、eMTC
 私有技术：LoRa、Sigfox
 
-为
+
+NB-IoT寻呼原理
+DRX(continuous reception)包含了空闲态的DRX和连续态的DRX，主要思想有两个：
+1.通过设计一套定时器，使终端和网络具有严格的时间同步
+2.终端侧与网络侧设计一套沟通机制，方便终端与网络商量自己是不是可以sleep，什么时候sleep
+
+NB-IoT为了省电，系统引入了PSM和eDRX（不连续接收）特性
+PSM是UE和核心网的相关特性，对基站是透明的。
