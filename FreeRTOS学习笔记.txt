@@ -1,0 +1,104 @@
+FreeRTOS的文件结构非常简单，移植或者版本升级替换也非常方便。
+    1)与FreeRTOS内核有关的文件数量仅为3个，分别是list.c queue.c tasks.c
+    该文件位于FreeRTOS\Source
+    2)与内存分配有关的文件共有4个，分别是heap_1.c,heap_2.c,heap_3.c,heap_4.c。4个文件只需选择其中的1个，STM32选择heap_2.c。
+    该文件位于FreeRTOS\Source\portable\MemMang
+    3)与移植相关的代码包括port.c,portasm.s,portmacro.h。这些代码不但和编译器有关还和平台（MCU）有关。FreeRTOS先以编译器为大类，然后再以平台（MCU）为小类。在这里选择IAR编译器，平台为ARM_CM3。
+    该文件位于FreeRTOS\Source\portable\IAR\ARM_CM3
+    4)除了上述内容之外，还包括FreeRTOS内核相关的头文件。
+    该文件FreeRTOS\Source\include
+3.必要的工程设置
+
+    开始之前需要引入V3.5库相关头文件，启动代码和CMSIS库。
+    在IAR中设置相关头文件的路径（应根据实际情况修改）
+    $PROJ_DIR$\CMSIS
+    $PROJ_DIR$\StdPeriph_Driver\inc
+    $PROJ_DIR$\User
+    $PROJ_DIR$\FreeRTOS\Source\include
+    $PROJ_DIR$\FreeRTOS\Source\portable\IAR\ARM_CM3
+    当然头文件的路径并不是绝对的，只要明确头文件在哪，设置正确路径即可。
+    除了设置C代码的相关头文件之外，还需要设置汇编代码的头文件路径，由于很少设置汇编代码头文件路径，
+    往往初次移植FreeRTOS会在此处遇到一些“困难”。
+    由于portasm.s需要FreeRTOSConfig.h中的相关宏定义，所以要根据FreeRTOSConfig.h的位置来设置汇编代码的头文件路径，
+    本例中FreeRTOSConfig.h位于User文件夹
+
+4.修改启动代码
+
+    由于SVC_Handle,PendSV_Handle和SysTick_Handle在portasm.s中被重定义，所以需要在启动代码中修改这些中断向量的名称，
+    并声明这些中断向量为外部函数。这也是初次使用FreeRTOS容易范的错误。
+    请注意，在汇编代码中";"代表注释。EXTERN和C语言的extern含义相同——意为外部函数(变量)。
+    EXTERN  __iar_program_start
+    EXTERN  SystemInit   
+    EXTERN  vPortSVCHandler           ;@
+    EXTERN  xPortPendSVHandler        ;@
+    EXTERN  xPortSysTickHandler       ;@
+    PUBLIC  __vector_table
+    声明vPortSVCHandler，xPortPendSVHandler和xPortSysTickHandler为外部函数。
+    vPortSVCHandler对应SVC_Handler 
+    xPortPendSVHandler对应PendSV_Handle
+    xPortSysTickHandle对应SysTick_Handle
+    
+5.代码实现
+
+    经过了以上修改之后，就可以轻松实现基于FreeRTOS的呼吸灯了。代码如下：
+
+/* Standard includes. */  
+#include <stdio.h>  
+  
+/* Scheduler includes. */  
+#include "FreeRTOS.h"  
+#include "task.h"  
+#include "queue.h"  
+  
+/* Library includes. */  
+#include "stm32f10x.h"  
+  
+#define LED0_ON()   GPIO_SetBits(GPIOB,GPIO_Pin_0);  
+#define LED0_OFF()  GPIO_ResetBits(GPIOB,GPIO_Pin_0);  
+  
+static void prvSetupHardware( void );  
+static void vLEDTask( void *pvParameters );  
+void vLedInit(void);  
+  
+int main( void )  
+{  
+  /* 初始化硬件平台 */  
+  prvSetupHardware();  
+  /* 建立任务 */  
+  xTaskCreate( vLEDTask, ( signed portCHAR * ) "LED", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY+3, NULL );  
+  /* 启动OS */  
+  vTaskStartScheduler();  
+    
+  return 0;  
+}  
+/*-----------------------------------------------------------*/  
+void vLEDTask( void *pvParameters )  
+{  
+  for( ;; )  
+  {  
+    LED0_ON();  
+    vTaskDelay( 100/portTICK_RATE_MS );  
+    LED0_OFF();  
+    vTaskDelay( 100/portTICK_RATE_MS );  
+  }  
+}  
+  
+/*-----------------------------------------------------------*/  
+static void prvSetupHardware( void )  
+{  
+  vLedInit();  
+}  
+/*-----------------------------------------------------------*/  
+void vLedInit( void )  
+{  
+  GPIO_InitTypeDef GPIO_InitStructure;  
+  RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );  
+  /*LED0 @ GPIOB.0*/  
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;  
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;  
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;  
+  GPIO_Init( GPIOB, &GPIO_InitStructure );      
+}  
+
+
+
