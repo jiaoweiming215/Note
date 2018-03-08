@@ -1,3 +1,5 @@
+RTOS将一个物理CPU虚拟成N个虚拟CPU，独立进行代码调用。
+
 FreeRTOS的文件结构非常简单，移植或者版本升级替换也非常方便。
     1)与FreeRTOS内核有关的文件数量仅为3个，分别是list.c queue.c tasks.c
     该文件位于FreeRTOS\Source
