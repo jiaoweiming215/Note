@@ -7,7 +7,7 @@ https://github.com/jiaoweiming215
 [我的github](https://github.com/jiaoweiming215"悬停显示")文字超链接格式[文字](url)
 
 * 插入符号*+space=圆点
-  * 二级圆点tab+*+space
+  * 二级圆点tab+*+space  
     * 三级圆点 注意需要切换为英文字符格式使用tab
 
 >1缩进 使用`大于号`
